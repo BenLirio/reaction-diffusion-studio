@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reaction Diffusion Studio</title>
+  <meta property="og:title" content="Reaction Diffusion Studio">
+  <meta property="og:description" content="Watch Turing-style spots, stripes, and labyrinthine textures emerge in real time. Click to seed life.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div id="ui-overlay">
+    <div id="header">
+      <h1>REACTION DIFFUSION STUDIO</h1>
+      <p id="subtitle">click or drag the canvas to seed chemical life</p>
+    </div>
+
+    <div id="controls">
+      <div id="presets">
+        <span class="control-label">PRESET</span>
+        <button class="preset-btn active" data-preset="spots">SPOTS</button>
+        <button class="preset-btn" data-preset="coral">CORAL</button>
+        <button class="preset-btn" data-preset="fingerprints">PRINTS</button>
+        <button class="preset-btn" data-preset="maze">MAZE</button>
+      </div>
+
+      <div id="sliders">
+        <div class="slider-row">
+          <label for="slider-feed">FEED <span id="val-feed">0.035</span></label>
+          <input type="range" id="slider-feed" min="0.01" max="0.1" step="0.001" value="0.035">
+        </div>
+        <div class="slider-row">
+          <label for="slider-kill">KILL <span id="val-kill">0.065</span></label>
+          <input type="range" id="slider-kill" min="0.04" max="0.075" step="0.001" value="0.065">
+        </div>
+        <div class="slider-row">
+          <label for="slider-dv">DIFF <span id="val-dv">0.105</span></label>
+          <input type="range" id="slider-dv" min="0.05" max="0.2" step="0.005" value="0.105">
+        </div>
+      </div>
+    </div>
+
+    <div id="actions">
+      <button id="btn-reset">RESET</button>
+      <button id="btn-save">SAVE ORGANISM</button>
+      <button id="btn-share">SHARE</button>
+    </div>
+
+    <div id="status-bar">
+      <span id="status-text">initializing chemical substrate...</span>
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div id="share" style="display:none">
+    <button onclick="share()">Share your result!</button>
+  </div>
+</body>
+</html>

@@ -34,6 +34,8 @@ html, body {
   height: 100%;
   cursor: crosshair;
   display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 #ui-overlay {
@@ -149,6 +151,31 @@ html, body {
 
 .slider-row label span {
   color: var(--accent);
+}
+
+.slider-hint {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+#caption-bar {
+  pointer-events: none;
+  background: rgba(0, 8, 24, 0.7);
+  border: 1px solid var(--border);
+  padding: 5px 12px;
+  max-width: 680px;
+  text-align: center;
+}
+
+#caption-text {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  text-shadow: 0 0 6px rgba(0, 220, 200, 0.4);
 }
 
 input[type="range"] {

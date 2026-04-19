@@ -1,13 +1,14 @@
 // Gray-Scott Reaction Diffusion Simulator
 // Bioluminescent deep-sea aesthetic
 
-const CELL_SIZE = 2; // pixels per cell
+const CELL_SIZE = 3; // pixels per cell (larger = faster, slightly chunkier)
+const MAX_GRID_CELLS = 90000; // hard cap on W*H to keep mobile/laptops smooth
 
 const PRESETS = {
-  spots:        { f: 0.035,  k: 0.065 },
-  coral:        { f: 0.0545, k: 0.062 },
-  fingerprints: { f: 0.037,  k: 0.060 },
-  maze:         { f: 0.029,  k: 0.057 },
+  spots:        { f: 0.035,  k: 0.065, caption: 'SPOTS: classic Turing dots — chemicals settle into separated cells' },
+  coral:        { f: 0.0545, k: 0.062, caption: 'CORAL: branching growth that fills space like reef structures' },
+  fingerprints: { f: 0.037,  k: 0.060, caption: 'PRINTS: parallel ridges and whorls — like skin patterns or zebra stripes' },
+  maze:         { f: 0.029,  k: 0.057, caption: 'MAZE: labyrinthine corridors that wander and connect' },
 };
 
 const Du = 0.2097;
@@ -57,6 +58,7 @@ function init() {
       document.getElementById('slider-kill').value = k;
       document.getElementById('val-feed').textContent = f.toFixed(4);
       document.getElementById('val-kill').textContent = k.toFixed(4);
+      setCaption(p.caption);
       setStatus('preset loaded — watch it evolve...');
     });
   });
@@ -66,16 +68,19 @@ function init() {
     f = parseFloat(e.target.value);
     document.getElementById('val-feed').textContent = f.toFixed(4);
     clearActivePreset();
+    setCaption('FEED ' + f.toFixed(4) + ' — speed at which new chemical is added (higher = more growth)');
   });
   document.getElementById('slider-kill').addEventListener('input', e => {
     k = parseFloat(e.target.value);
     document.getElementById('val-kill').textContent = k.toFixed(4);
     clearActivePreset();
+    setCaption('KILL ' + k.toFixed(4) + ' — speed at which chemical decays (higher = sparser patterns)');
   });
   document.getElementById('slider-dv').addEventListener('input', e => {
     Dv = parseFloat(e.target.value);
     document.getElementById('val-dv').textContent = Dv.toFixed(3);
     clearActivePreset();
+    setCaption('DIFF ' + Dv.toFixed(3) + ' — how far chemical spreads each step (higher = blurrier shapes)');
   });
 
   // Buttons
@@ -93,8 +98,20 @@ function init() {
 function resize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  W = Math.floor(canvas.width / CELL_SIZE);
-  H = Math.floor(canvas.height / CELL_SIZE);
+  // Start at the configured cell size, then bump up if the grid would exceed our cap
+  let cellSize = CELL_SIZE;
+  let cells = Math.floor(canvas.width / cellSize) * Math.floor(canvas.height / cellSize);
+  while (cells > MAX_GRID_CELLS) {
+    cellSize += 1;
+    cells = Math.floor(canvas.width / cellSize) * Math.floor(canvas.height / cellSize);
+  }
+  W = Math.floor(canvas.width / cellSize);
+  H = Math.floor(canvas.height / cellSize);
+  // Resize the canvas backing store to match the simulation grid; CSS scales it
+  // up to fill the viewport. This avoids the per-frame drawImage upscale.
+  canvas.width = W;
+  canvas.height = H;
+  ctx.imageSmoothingEnabled = false;
   imageData = ctx.createImageData(W, H);
   pixels = imageData.data;
 }
@@ -133,15 +150,18 @@ function placeSeed(cx, cy, radius) {
 }
 
 function seed(screenX, screenY) {
-  const gx = Math.floor(screenX / CELL_SIZE);
-  const gy = Math.floor(screenY / CELL_SIZE);
+  // Canvas backing store is W x H but CSS scales it to fill the viewport.
+  // Map screen coords through the canvas's rendered size to grid coords.
+  const rect = canvas.getBoundingClientRect();
+  const gx = Math.floor((screenX - rect.left) / rect.width * W);
+  const gy = Math.floor((screenY - rect.top) / rect.height * H);
   placeSeed(gx, gy, 5);
   setStatus('chemical introduced — watching pattern propagate...');
 }
 
 // Laplacian with 9-point stencil (wrapped edges)
 function step() {
-  const STEPS_PER_FRAME = 9;
+  const STEPS_PER_FRAME = 6;
   for (let s = 0; s < STEPS_PER_FRAME; s++) {
     simulateStep();
     // Swap buffers
@@ -253,11 +273,8 @@ function render() {
     data[p + 2] = b;
     data[p + 3] = 255;
   }
-  // Draw the grid-resolution image then scale up to fill canvas
+  // Canvas backing store == grid size; CSS scales it to viewport. Single putImageData call.
   ctx.putImageData(imageData, 0, 0);
-  if (CELL_SIZE > 1) {
-    ctx.drawImage(canvas, 0, 0, W, H, 0, 0, canvas.width, canvas.height);
-  }
 }
 
 function loop() {
@@ -276,19 +293,29 @@ function setStatus(msg) {
   document.getElementById('status-text').textContent = msg;
 }
 
+function setCaption(msg) {
+  const el = document.getElementById('caption-text');
+  if (el) el.textContent = msg;
+}
+
 function clearActivePreset() {
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
 }
 
 function saveOrganism() {
-  // Render full-resolution to a temp canvas
+  // Scale the simulation grid up by 4x for a sharper downloadable PNG
+  const SCALE = 4;
   const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = canvas.width;
-  tempCanvas.height = canvas.height;
+  tempCanvas.width = W * SCALE;
+  tempCanvas.height = H * SCALE;
   const tempCtx = tempCanvas.getContext('2d');
 
-  // Draw current simulation state at full resolution
-  const fullImg = ctx.createImageData(W, H);
+  const offscreen = document.createElement('canvas');
+  offscreen.width = W;
+  offscreen.height = H;
+  const offCtx = offscreen.getContext('2d');
+
+  const fullImg = offCtx.createImageData(W, H);
   const d = fullImg.data;
   for (let i = 0; i < W * H; i++) {
     const v = vCurr[i];
@@ -296,11 +323,6 @@ function saveOrganism() {
     const p = i * 4;
     d[p] = r; d[p+1] = g; d[p+2] = b; d[p+3] = 255;
   }
-
-  const offscreen = document.createElement('canvas');
-  offscreen.width = W;
-  offscreen.height = H;
-  const offCtx = offscreen.getContext('2d');
   offCtx.putImageData(fullImg, 0, 0);
 
   tempCtx.imageSmoothingEnabled = false;

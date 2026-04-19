@@ -32,17 +32,20 @@
       </div>
 
       <div id="sliders">
-        <div class="slider-row">
+        <div class="slider-row" title="FEED: how fast new chemical U is added. Higher = more growth, more spots/branches.">
           <label for="slider-feed">FEED <span id="val-feed">0.035</span></label>
           <input type="range" id="slider-feed" min="0.01" max="0.1" step="0.001" value="0.035">
+          <span class="slider-hint">food rate</span>
         </div>
-        <div class="slider-row">
+        <div class="slider-row" title="KILL: how fast chemical V is removed. Higher = faster decay, sparser patterns.">
           <label for="slider-kill">KILL <span id="val-kill">0.065</span></label>
           <input type="range" id="slider-kill" min="0.04" max="0.075" step="0.001" value="0.065">
+          <span class="slider-hint">decay rate</span>
         </div>
-        <div class="slider-row">
+        <div class="slider-row" title="DIFF: how fast chemical V spreads. Higher = blurrier, more connected shapes.">
           <label for="slider-dv">DIFF <span id="val-dv">0.105</span></label>
           <input type="range" id="slider-dv" min="0.05" max="0.2" step="0.005" value="0.105">
+          <span class="slider-hint">spread rate</span>
         </div>
       </div>
     </div>
@@ -51,6 +54,10 @@
       <button id="btn-reset">RESET</button>
       <button id="btn-save">SAVE ORGANISM</button>
       <button id="btn-share">SHARE</button>
+    </div>
+
+    <div id="caption-bar">
+      <span id="caption-text">SPOTS: classic Turing dots — chemicals settle into separated cells</span>
     </div>
 
     <div id="status-bar">

@@ -257,6 +257,166 @@ input[type="range"]::-moz-range-thumb {
   display: none;
 }
 
+#btn-guide {
+  margin-top: 6px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  padding: 5px 12px;
+  cursor: pointer;
+  pointer-events: all;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+#btn-guide:hover {
+  background: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 0 12px rgba(0, 220, 200, 0.55);
+}
+
+#guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(1, 8, 18, 0.78);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 16px 16px;
+  pointer-events: all;
+}
+
+#guide-overlay.hidden {
+  display: none;
+}
+
+#guide-modal {
+  background: var(--panel-bg);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 30px rgba(0, 220, 200, 0.25);
+  width: 100%;
+  max-width: 560px;
+  padding: 14px 18px 16px;
+  color: var(--text);
+  font-family: var(--font);
+}
+
+#guide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+#guide-step-label {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+}
+
+#guide-close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+#guide-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+#guide-title {
+  font-size: clamp(12px, 2.2vw, 15px);
+  color: var(--accent-bright);
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+  text-shadow: 0 0 8px rgba(0, 220, 200, 0.4);
+}
+
+#guide-body {
+  font-size: clamp(11px, 1.6vw, 12px);
+  line-height: 1.55;
+  color: var(--text);
+  letter-spacing: 0.03em;
+  margin-bottom: 10px;
+}
+
+#guide-body strong {
+  color: var(--accent-bright);
+  font-weight: 700;
+}
+
+#guide-body em {
+  color: var(--accent);
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+#guide-preview-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+
+#guide-nav {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+#guide-nav button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  padding: 7px 14px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+#guide-nav button:hover:not([disabled]) {
+  border-color: var(--accent);
+  color: var(--accent-bright);
+  box-shadow: 0 0 8px rgba(0, 220, 200, 0.35);
+}
+
+#guide-nav button[disabled] {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#guide-nav button.hidden {
+  display: none;
+}
+
+#guide-finish {
+  background: var(--accent) !important;
+  color: var(--bg) !important;
+  border-color: var(--accent) !important;
+  font-weight: 700;
+}
+
+#guide-finish:hover:not([disabled]) {
+  box-shadow: 0 0 16px rgba(0, 220, 200, 0.7) !important;
+  color: var(--bg) !important;
+}
+
 @media (max-width: 480px) {
   #controls {
     flex-direction: column;
@@ -269,5 +429,10 @@ input[type="range"]::-moz-range-thumb {
 
   #header h1 {
     font-size: 11px;
+  }
+
+  #guide-modal {
+    max-width: 100%;
+    padding: 12px 14px 14px;
   }
 }

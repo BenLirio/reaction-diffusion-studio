@@ -20,6 +20,7 @@
     <div id="header">
       <h1>REACTION DIFFUSION STUDIO</h1>
       <p id="subtitle">click or drag the canvas to seed chemical life</p>
+      <button id="btn-guide" type="button">? HOW THIS WORKS</button>
     </div>
 
     <div id="controls">
@@ -66,6 +67,23 @@
   </div>
 
   <canvas id="canvas"></canvas>
+
+  <div id="guide-overlay" class="hidden">
+    <div id="guide-modal">
+      <div id="guide-header">
+        <span id="guide-step-label">STEP 1 / 7</span>
+        <button id="guide-close" type="button" aria-label="Close guide">SKIP &times;</button>
+      </div>
+      <h2 id="guide-title">What is reaction-diffusion?</h2>
+      <p id="guide-body">Two chemicals, U and V, live on a grid. U is the food, V is the reactant. V eats U, grows, then decays. As V diffuses and reacts, patterns form on their own — no artist, just math. The sliders control that math. Let's walk through each one.</p>
+      <div id="guide-preview-label">LIVE PREVIEW (this is what the current settings do):</div>
+      <div id="guide-nav">
+        <button id="guide-prev" type="button" disabled>&lt; BACK</button>
+        <button id="guide-next" type="button">NEXT &gt;</button>
+        <button id="guide-finish" type="button" class="hidden">ENTER SANDBOX</button>
+      </div>
+    </div>
+  </div>
 
   <div id="share" style="display:none">
     <button onclick="share()">Share your result!</button>

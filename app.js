@@ -91,8 +91,18 @@ function init() {
   document.getElementById('btn-save').addEventListener('click', saveOrganism);
   document.getElementById('btn-share').addEventListener('click', share);
 
+  // Guide
+  initGuide();
+
   resetGrid();
   loop();
+
+  // Auto-open guide on first visit
+  try {
+    if (!localStorage.getItem('rds_guide_seen')) {
+      openGuide();
+    }
+  } catch (_) { /* private mode — just skip auto-open */ }
 }
 
 function resize() {
@@ -348,6 +358,147 @@ function share() {
         setStatus('copy this link: ' + location.href);
       });
   }
+}
+
+// --- Guided tour -----------------------------------------------------------
+// Walks a new user through what reaction-diffusion is and what each slider /
+// preset actually does. Each step mutates the live simulation (preset +
+// slider values) so the running canvas behind the modal *is* the example.
+
+const GUIDE_STEPS = [
+  {
+    title: 'What is reaction-diffusion?',
+    body:
+      'Two invisible chemicals — <em>U</em> (food) and <em>V</em> (reactant) — sit on a grid. ' +
+      'V consumes U to make more V, then slowly dies off. Because V also <strong>diffuses</strong> ' +
+      '(spreads to neighbors), clusters of V compete for U at their edges. That competition ' +
+      'carves patterns out of a uniform soup — the same math nature uses to make zebra stripes, ' +
+      'leopard spots, and seashell whorls.',
+    apply: () => { applyPresetByName('spots'); setSlider('slider-dv', 0.105); Dv = 0.105; document.getElementById('val-dv').textContent = '0.105'; resetGrid(); }
+  },
+  {
+    title: 'Meet FEED — the food rate',
+    body:
+      '<strong>FEED</strong> is how fast fresh U (food) is added to every cell. More food lets ' +
+      'V keep growing instead of starving out. <em>Low FEED</em> → patterns thin out and die. ' +
+      '<em>High FEED</em> → V explodes outward, covering everything. Watch the canvas: we just ' +
+      'cranked FEED higher than the spots preset, so you\'ll see more aggressive growth.',
+    apply: () => { setSlider('slider-feed', 0.06); f = 0.06; document.getElementById('val-feed').textContent = '0.0600'; clearActivePreset(); resetGrid(); }
+  },
+  {
+    title: 'Meet KILL — the decay rate',
+    body:
+      '<strong>KILL</strong> is how fast V is removed. It\'s the enemy of FEED. ' +
+      '<em>Low KILL</em> → V lingers and fills space. <em>High KILL</em> → V dies before it can ' +
+      'spread, leaving sparse isolated dots. The magic lives in the balance between FEED and ' +
+      'KILL — tiny shifts in either one flip the pattern to a whole new regime.',
+    apply: () => { setSlider('slider-feed', 0.037); f = 0.037; document.getElementById('val-feed').textContent = '0.0370'; setSlider('slider-kill', 0.072); k = 0.072; document.getElementById('val-kill').textContent = '0.0720'; clearActivePreset(); resetGrid(); }
+  },
+  {
+    title: 'Meet DIFF — how far V spreads',
+    body:
+      '<strong>DIFF</strong> controls how quickly V leaks into neighboring cells each step. ' +
+      '<em>Low DIFF</em> → sharp, crisp, pixel-scale patterns. <em>High DIFF</em> → blurry, ' +
+      'connected blobs that merge into each other. We just bumped it up — notice how the edges ' +
+      'get soft and the shapes want to link up.',
+    apply: () => { setSlider('slider-dv', 0.17); Dv = 0.17; document.getElementById('val-dv').textContent = '0.170'; clearActivePreset(); resetGrid(); }
+  },
+  {
+    title: 'Preset: SPOTS',
+    body:
+      'Classic Turing dots. FEED and KILL are tuned so V clusters can form but never overrun ' +
+      'each other — every dot fights its neighbors for food, and they settle into a stable, ' +
+      'roughly-even spacing. This is the pattern on most spotted animals.',
+    apply: () => applyPresetByName('spots')
+  },
+  {
+    title: 'Preset: CORAL & MAZE',
+    body:
+      '<strong>CORAL</strong>: slightly more food, slightly less kill. V can\'t form discrete ' +
+      'dots anymore — it grows outward in branching fingers. <strong>MAZE</strong>: further ' +
+      'down the dial — V forms connected corridors that wander and link into labyrinths. ' +
+      'Same equations, different balance.',
+    apply: () => applyPresetByName('coral'),
+    subAction: () => setTimeout(() => { applyPresetByName('maze'); }, 3500)
+  },
+  {
+    title: 'You\'re ready — the canvas is yours',
+    body:
+      '<strong>Click or drag</strong> to seed fresh V anywhere. Move the sliders to find ' +
+      'patterns nobody has named yet — the interesting zones are right on the edges between ' +
+      'presets. Hit <strong>SAVE ORGANISM</strong> when you find one you like. The ? button ' +
+      'up top reopens this guide anytime.',
+    apply: () => applyPresetByName('fingerprints')
+  }
+];
+
+let guideIdx = 0;
+
+function initGuide() {
+  document.getElementById('btn-guide').addEventListener('click', openGuide);
+  document.getElementById('guide-close').addEventListener('click', closeGuide);
+  document.getElementById('guide-prev').addEventListener('click', () => goStep(guideIdx - 1));
+  document.getElementById('guide-next').addEventListener('click', () => goStep(guideIdx + 1));
+  document.getElementById('guide-finish').addEventListener('click', closeGuide);
+}
+
+function openGuide() {
+  guideIdx = 0;
+  document.getElementById('guide-overlay').classList.remove('hidden');
+  renderStep();
+}
+
+function closeGuide() {
+  document.getElementById('guide-overlay').classList.add('hidden');
+  try { localStorage.setItem('rds_guide_seen', '1'); } catch (_) {}
+  setStatus('sandbox is yours — click anywhere to seed, drag the sliders');
+}
+
+function goStep(n) {
+  if (n < 0 || n >= GUIDE_STEPS.length) return;
+  guideIdx = n;
+  renderStep();
+}
+
+function renderStep() {
+  const step = GUIDE_STEPS[guideIdx];
+  document.getElementById('guide-step-label').textContent =
+    'STEP ' + (guideIdx + 1) + ' / ' + GUIDE_STEPS.length;
+  document.getElementById('guide-title').textContent = step.title;
+  document.getElementById('guide-body').innerHTML = step.body;
+
+  document.getElementById('guide-prev').disabled = guideIdx === 0;
+  const isLast = guideIdx === GUIDE_STEPS.length - 1;
+  document.getElementById('guide-next').classList.toggle('hidden', isLast);
+  document.getElementById('guide-finish').classList.toggle('hidden', !isLast);
+
+  if (typeof step.apply === 'function') {
+    try { step.apply(); } catch (e) { /* ignore */ }
+  }
+  if (typeof step.subAction === 'function') {
+    try { step.subAction(); } catch (e) { /* ignore */ }
+  }
+}
+
+function applyPresetByName(name) {
+  const p = PRESETS[name];
+  if (!p) return;
+  f = p.f;
+  k = p.k;
+  setSlider('slider-feed', f);
+  setSlider('slider-kill', k);
+  document.getElementById('val-feed').textContent = f.toFixed(4);
+  document.getElementById('val-kill').textContent = k.toFixed(4);
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.preset === name);
+  });
+  setCaption(p.caption);
+  resetGrid();
+}
+
+function setSlider(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value;
 }
 
 window.addEventListener('DOMContentLoaded', init);

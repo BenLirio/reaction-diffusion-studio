@@ -21,6 +21,7 @@ let W, H;        // grid dimensions (pixels / CELL_SIZE)
 let uCurr, vCurr, uNext, vNext;
 let imageData, pixels;
 let isPointerDown = false;
+let lastPointerX = 0, lastPointerY = 0;
 let animId;
 let frameCount = 0;
 
@@ -31,18 +32,33 @@ function init() {
   resize();
   window.addEventListener('resize', () => { resize(); resetGrid(); });
 
-  // Pointer events for seeding
-  canvas.addEventListener('mousedown', e => { isPointerDown = true; seed(e.clientX, e.clientY); });
-  canvas.addEventListener('mousemove', e => { if (isPointerDown) seed(e.clientX, e.clientY); });
+  // Pointer events for seeding. Track the last pointer position so the loop can
+  // keep seeding at that spot even when the user holds the button without moving
+  // the cursor (fixes: "cube only places when mouse is moving").
+  canvas.addEventListener('mousedown', e => {
+    isPointerDown = true;
+    lastPointerX = e.clientX;
+    lastPointerY = e.clientY;
+    seed(e.clientX, e.clientY);
+  });
+  canvas.addEventListener('mousemove', e => {
+    lastPointerX = e.clientX;
+    lastPointerY = e.clientY;
+    if (isPointerDown) seed(e.clientX, e.clientY);
+  });
   window.addEventListener('mouseup', () => { isPointerDown = false; });
 
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
     isPointerDown = true;
+    lastPointerX = e.touches[0].clientX;
+    lastPointerY = e.touches[0].clientY;
     seed(e.touches[0].clientX, e.touches[0].clientY);
   }, { passive: false });
   canvas.addEventListener('touchmove', e => {
     e.preventDefault();
+    lastPointerX = e.touches[0].clientX;
+    lastPointerY = e.touches[0].clientY;
     if (isPointerDown) seed(e.touches[0].clientX, e.touches[0].clientY);
   }, { passive: false });
   window.addEventListener('touchend', () => { isPointerDown = false; });
@@ -288,6 +304,13 @@ function render() {
 }
 
 function loop() {
+  // If the pointer is held down, keep seeding at the last known position each
+  // frame — even if the cursor isn't moving. Without this, seeding only
+  // happens on mousemove, which feels broken when the user holds still.
+  if (isPointerDown) {
+    seed(lastPointerX, lastPointerY);
+  }
+
   step();
   render();
   frameCount++;
